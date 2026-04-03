@@ -9,6 +9,7 @@ const loginSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
   providers: [
     Credentials({
       name: "credentials",
@@ -17,29 +18,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        try {
+          const parsed = loginSchema.safeParse(credentials);
+          if (!parsed.success) return null;
 
-        const { email, password } = parsed.data;
+          const { email, password } = parsed.data;
 
-        // Lazy import to avoid Prisma initialization during build
-        const { prisma } = await import("@/lib/prisma");
+          const { prisma } = await import("@/lib/prisma");
 
-        const admin = await prisma.admin.findUnique({
-          where: { email },
-        });
+          const admin = await prisma.admin.findUnique({
+            where: { email },
+          });
 
-        if (!admin || !admin.isActive) return null;
+          if (!admin || !admin.isActive) return null;
 
-        const isValidPassword = await bcrypt.compare(password, admin.password);
-        if (!isValidPassword) return null;
+          const isValidPassword = await bcrypt.compare(password, admin.password);
+          if (!isValidPassword) return null;
 
-        return {
-          id: admin.id,
-          email: admin.email,
-          name: admin.name,
-          role: admin.role,
-        };
+          return {
+            id: admin.id,
+            email: admin.email,
+            name: admin.name,
+            role: admin.role,
+          };
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
+        }
       },
     }),
   ],
@@ -68,4 +73,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/admin/login",
   },
   trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === "production",
 });
