@@ -21,8 +21,8 @@ export default function StatsSection({ stats }: StatsSectionProps) {
       iconColor: "text-primary-600",
     },
     {
-      icon: Users,
-      value: `+${stats.applicationsCount}`,
+     icon: Users,
+      value: "+5000",
       label: "طالب استفاد",
       color: "from-gold-500 to-gold-400",
       bg: "bg-gold-50",
