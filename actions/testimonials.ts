@@ -25,8 +25,9 @@ export async function createTestimonial(data: unknown): Promise<ActionResponse> 
     revalidatePath("/");
     revalidatePath("/admin/testimonials");
     return { success: true };
-  } catch {
-    return { success: false, error: "فشل الإنشاء" };
+  } catch (error) {
+    console.error("createTestimonial error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "فشل الإنشاء" };
   }
 }
 
@@ -38,8 +39,9 @@ export async function updateTestimonial(id: string, data: unknown): Promise<Acti
     revalidatePath("/");
     revalidatePath("/admin/testimonials");
     return { success: true };
-  } catch {
-    return { success: false, error: "فشل التحديث" };
+  } catch (error) {
+    console.error("updateTestimonial error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "فشل التحديث" };
   }
 }
 
@@ -49,8 +51,9 @@ export async function deleteTestimonial(id: string): Promise<ActionResponse> {
     revalidatePath("/");
     revalidatePath("/admin/testimonials");
     return { success: true };
-  } catch {
-    return { success: false, error: "فشل الحذف" };
+  } catch (error) {
+    console.error("deleteTestimonial error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "فشل الحذف" };
   }
 }
 
@@ -59,7 +62,8 @@ export async function toggleTestimonialPublished(id: string, isPublished: boolea
     await prisma.testimonial.update({ where: { id }, data: { isPublished } });
     revalidatePath("/");
     return { success: true };
-  } catch {
-    return { success: false, error: "فشل التحديث" };
+  } catch (error) {
+    console.error("toggleTestimonialPublished error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "فشل التحديث" };
   }
 }

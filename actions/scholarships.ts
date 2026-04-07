@@ -35,7 +35,7 @@ export async function createScholarship(data: unknown): Promise<ActionResponse<{
     return { success: true, data: { id: scholarship.id, slug: scholarship.slug } };
   } catch (error) {
     console.error("createScholarship error:", error);
-    return { success: false, error: "فشل إنشاء المنحة" };
+    return { success: false, error: error instanceof Error ? error.message : "فشل إنشاء المنحة" };
   }
 }
 
@@ -75,7 +75,7 @@ export async function updateScholarship(
     return { success: true };
   } catch (error) {
     console.error("updateScholarship error:", error);
-    return { success: false, error: "فشل تحديث المنحة" };
+    return { success: false, error: error instanceof Error ? error.message : "فشل تحديث المنحة" };
   }
 }
 

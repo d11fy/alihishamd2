@@ -47,7 +47,7 @@ async function getStats() {
     ]);
     return { scholarshipsCount, applicationsCount };
   } catch {
-    return { scholarshipsCount: 50, applicationsCount: 200 };
+    return { scholarshipsCount: 50, applicationsCount: 5000 };
   }
 }
 

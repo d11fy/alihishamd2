@@ -152,6 +152,26 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
     });
   }
 
+  function onInvalid(errs: typeof errors) {
+    const messages = Object.entries(errs).map(([field, err]) => {
+      const labels: Record<string, string> = {
+        title: "اسم المنحة", slug: "Slug", provider: "الجهة المانحة",
+        country: "الدولة", degreeLevel: "المرحلة الدراسية",
+        shortDescription: "النبذة المختصرة", fullDescription: "الوصف الكامل",
+        benefits: "المميزات", requirements: "الشروط", externalLink: "رابط التقديم",
+      };
+      return `${labels[field] ?? field}: ${(err as { message?: string })?.message ?? "مطلوب"}`;
+    });
+    toast({
+      title: "يوجد حقول ناقصة أو غير صحيحة",
+      description: messages.slice(0, 3).join(" | "),
+      variant: "destructive",
+    });
+    // scroll to first error
+    const firstError = document.querySelector(".border-red-300, [data-error]");
+    firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   const DEGREE_OPTIONS = Object.entries(DEGREE_LEVEL_LABELS);
   const currentDegrees = watch("degreeLevel") ?? [];
 
@@ -165,7 +185,7 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       {/* Basic Info */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-brand-sm p-6">
         <h2 className="font-bold text-gray-900 mb-5 pb-3 border-b border-gray-100 flex items-center gap-2">
