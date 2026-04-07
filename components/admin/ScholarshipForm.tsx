@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Save, Plus, X, RefreshCw } from "lucide-react";
+import { Loader2, Save, Plus, X, RefreshCw, Upload, ImageIcon, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +15,7 @@ import { createScholarship, updateScholarship } from "@/actions/scholarships";
 import { generateSlug } from "@/lib/utils";
 import { DEGREE_LEVEL_LABELS, SCHOLARSHIP_TYPE_LABELS, FUNDING_TYPE_LABELS, SCHOLARSHIP_STATUS_LABELS } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { UploadButton } from "@/lib/uploadthing";
 import type { Scholarship } from "@/types";
 
 interface ScholarshipFormProps {
@@ -369,8 +371,62 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
               {errors.externalLink && <p className="text-xs text-red-500 mt-1">{errors.externalLink.message}</p>}
             </div>
             <div>
-              <Label className="input-label">رابط صورة الغلاف</Label>
-              <Input type="url" placeholder="https://..." dir="ltr" {...register("coverImage")} />
+              <Label className="input-label">صورة الغلاف</Label>
+              <Controller
+                control={control}
+                name="coverImage"
+                render={({ field }) => (
+                  <div className="space-y-3">
+                    {field.value ? (
+                      <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                        <Image
+                          src={field.value}
+                          alt="صورة الغلاف"
+                          width={600}
+                          height={315}
+                          className="w-full h-36 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => field.onChange("")}
+                          className="absolute top-2 left-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 text-gray-400">
+                        <ImageIcon className="w-8 h-8 mb-2" />
+                        <p className="text-xs">لم يتم اختيار صورة</p>
+                      </div>
+                    )}
+                    <UploadButton
+                      endpoint="scholarshipImage"
+                      onClientUploadComplete={(res) => {
+                        if (res?.[0]?.url) field.onChange(res[0].url);
+                        toast({ title: "تم رفع الصورة بنجاح" });
+                      }}
+                      onUploadError={(error) => {
+                        toast({ title: "فشل رفع الصورة", description: error.message, variant: "destructive" });
+                      }}
+                      appearance={{
+                        button: "bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-xl w-full ut-uploading:bg-primary-400",
+                        allowedContent: "hidden",
+                      }}
+                      content={{
+                        button({ ready, isUploading }) {
+                          if (isUploading) return <><Loader2 className="w-4 h-4 animate-spin inline ml-1" /> جارٍ الرفع...</>;
+                          if (ready) return <><Upload className="w-4 h-4 inline ml-1" /> {field.value ? "تغيير الصورة" : "رفع صورة"}</>;
+                          return "جارٍ التهيئة...";
+                        },
+                      }}
+                    />
+                    <p className="text-xs text-gray-400 text-center">
+                      المقاس المناسب: <span className="font-semibold text-gray-600">1200 × 630 بكسل</span> (نسبة 16:9) · الحد الأقصى: 4MB · JPG أو PNG أو WEBP
+                    </p>
+                  </div>
+                )}
+              />
             </div>
           </div>
         </div>
