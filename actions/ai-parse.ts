@@ -1,8 +1,8 @@
 "use server";
 
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export interface ParsedScholarship {
   title?: string;
@@ -23,60 +23,57 @@ export interface ParsedScholarship {
   externalLink?: string;
 }
 
-export async function parseScholarshipText(text: string): Promise<{ success: true; data: ParsedScholarship } | { success: false; error: string }> {
+export async function parseScholarshipText(
+  text: string
+): Promise<{ success: true; data: ParsedScholarship } | { success: false; error: string }> {
   try {
-    const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+    const response = await client.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       max_tokens: 2000,
+      response_format: { type: "json_object" },
       messages: [
         {
-          role: "user",
-          content: `أنت مساعد متخصص في تحليل تفاصيل المنح الدراسية. استخرج المعلومات من النص التالي وأرجعها بتنسيق JSON فقط بدون أي نص إضافي.
+          role: "system",
+          content: `أنت مساعد متخصص في تحليل تفاصيل المنح الدراسية. استخرج المعلومات من النص وأرجعها بتنسيق JSON فقط.
 
-النص:
-${text}
-
-أرجع JSON بهذا الهيكل بالضبط (اترك الحقل null إذا لم تجد المعلومة):
+الهيكل المطلوب:
 {
   "title": "اسم المنحة",
-  "provider": "الجهة المانحة (جامعة أو منظمة)",
+  "provider": "الجهة المانحة",
   "country": "الدولة",
   "city": "المدينة أو null",
-  "degreeLevel": ["BACHELOR" و/أو "MASTER" و/أو "PHD" و/أو "DIPLOMA" و/أو "LANGUAGE_COURSE" و/أو "SHORT_COURSE" و/أو "ANY"],
+  "degreeLevel": ["BACHELOR","MASTER","PHD","DIPLOMA","LANGUAGE_COURSE","SHORT_COURSE","ANY"] (اختر ما ينطبق),
   "scholarshipType": "FULLY_FUNDED أو PARTIALLY_FUNDED أو TUITION_ONLY أو LIVING_ALLOWANCE أو RESEARCH_GRANT أو EXCHANGE",
   "fundingType": "GOVERNMENT أو UNIVERSITY أو NGO أو PRIVATE أو INTERNATIONAL_ORGANIZATION",
   "deadline": "YYYY-MM-DD أو null",
   "shortDescription": "وصف مختصر 50-150 حرف",
-  "fullDescription": "وصف كامل تفصيلي للمنحة",
-  "majors": ["قائمة التخصصات المقبولة"],
-  "benefits": ["قائمة مزايا المنحة مثل: تذاكر سفر، سكن مجاني، مكافأة شهرية..."],
-  "requirements": ["قائمة شروط التقديم"],
-  "requiredDocuments": ["قائمة المستندات المطلوبة"],
-  "applicationMethod": "طريقة وخطوات التقديم أو null",
-  "externalLink": "رابط التقديم إذا موجود أو null"
+  "fullDescription": "وصف كامل تفصيلي",
+  "majors": ["التخصصات المقبولة"],
+  "benefits": ["مزايا المنحة"],
+  "requirements": ["شروط التقديم"],
+  "requiredDocuments": ["المستندات المطلوبة"],
+  "applicationMethod": "طريقة التقديم أو null",
+  "externalLink": "رابط التقديم أو null"
 }`,
+        },
+        {
+          role: "user",
+          content: text,
         },
       ],
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
-      return { success: false, error: "استجابة غير متوقعة من الذكاء الاصطناعي" };
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      return { success: false, error: "لم تصل استجابة من الذكاء الاصطناعي" };
     }
 
-    // Extract JSON from response
-    const jsonMatch = content.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return { success: false, error: "لم يتمكن الذكاء الاصطناعي من تحليل النص" };
-    }
+    const parsed = JSON.parse(content) as ParsedScholarship;
 
-    const parsed = JSON.parse(jsonMatch[0]) as ParsedScholarship;
-
-    // Clean nulls
-    Object.keys(parsed).forEach((key) => {
-      const k = key as keyof ParsedScholarship;
-      if (parsed[k] === null || parsed[k] === undefined) delete parsed[k];
-      if (Array.isArray(parsed[k]) && (parsed[k] as string[]).length === 0) delete parsed[k];
+    // Clean nulls and empty arrays
+    (Object.keys(parsed) as (keyof ParsedScholarship)[]).forEach((key) => {
+      if (parsed[key] === null || parsed[key] === undefined) delete parsed[key];
+      if (Array.isArray(parsed[key]) && (parsed[key] as string[]).length === 0) delete parsed[key];
     });
 
     return { success: true, data: parsed };
