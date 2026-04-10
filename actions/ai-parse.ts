@@ -2,6 +2,10 @@
 
 import Groq from "groq-sdk";
 
+if (!process.env.GROQ_API_KEY) {
+  console.error("GROQ_API_KEY is not set in environment variables");
+}
+
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export interface ParsedScholarship {
@@ -26,14 +30,21 @@ export interface ParsedScholarship {
 export async function parseScholarshipText(
   text: string
 ): Promise<{ success: true; data: ParsedScholarship } | { success: false; error: string }> {
+  if (!process.env.GROQ_API_KEY) {
+    return { success: false, error: "مفتاح API غير موجود - أضف GROQ_API_KEY في إعدادات Vercel" };
+  }
+
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
     const response = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       max_tokens: 2000,
       response_format: { type: "json_object" },
       messages: [
         {
-          role: "system",
+          role: "system" as const,
           content: `أنت مساعد متخصص في تحليل تفاصيل المنح الدراسية. استخرج المعلومات من النص وأرجعها بتنسيق JSON فقط.
 
 الهيكل المطلوب:
@@ -57,11 +68,13 @@ export async function parseScholarshipText(
 }`,
         },
         {
-          role: "user",
+          role: "user" as const,
           content: text,
         },
       ],
     });
+
+    clearTimeout(timeout);
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -79,6 +92,9 @@ export async function parseScholarshipText(
     return { success: true, data: parsed };
   } catch (error) {
     console.error("parseScholarshipText error:", error);
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "انتهت مهلة الطلب - حاول مجدداً" };
+    }
     return { success: false, error: error instanceof Error ? error.message : "فشل تحليل النص" };
   }
 }
