@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Save, Plus, X, RefreshCw, Upload, ImageIcon, Trash2 } from "lucide-react";
+import { Loader2, Save, Plus, X, RefreshCw, Upload, ImageIcon, Trash2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { scholarshipSchema, type ScholarshipSchemaType } from "@/lib/validators/scholarship";
 import { createScholarship, updateScholarship } from "@/actions/scholarships";
+import { parseScholarshipText } from "@/actions/ai-parse";
 import { generateSlug } from "@/lib/utils";
 import { DEGREE_LEVEL_LABELS, SCHOLARSHIP_TYPE_LABELS, FUNDING_TYPE_LABELS, SCHOLARSHIP_STATUS_LABELS } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +81,9 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [aiText, setAiText] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const {
     register,
@@ -138,6 +142,43 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
     if (title) setValue("slug", generateSlug(title));
   }
 
+  async function handleAiFill() {
+    if (!aiText.trim()) return;
+    setAiLoading(true);
+    const result = await parseScholarshipText(aiText);
+    setAiLoading(false);
+
+    if (!result.success) {
+      toast({ title: "فشل التحليل", description: result.error, variant: "destructive" });
+      return;
+    }
+
+    const d = result.data;
+    if (d.title) setValue("title", d.title);
+    if (d.provider) setValue("provider", d.provider);
+    if (d.country) setValue("country", d.country);
+    if (d.city) setValue("city", d.city);
+    if (d.degreeLevel?.length) setValue("degreeLevel", d.degreeLevel as ScholarshipSchemaType["degreeLevel"]);
+    if (d.scholarshipType) setValue("scholarshipType", d.scholarshipType as ScholarshipSchemaType["scholarshipType"]);
+    if (d.fundingType) setValue("fundingType", d.fundingType as ScholarshipSchemaType["fundingType"]);
+    if (d.deadline) setValue("deadline", d.deadline);
+    if (d.shortDescription) setValue("shortDescription", d.shortDescription);
+    if (d.fullDescription) setValue("fullDescription", d.fullDescription);
+    if (d.majors?.length) setValue("majors", d.majors);
+    if (d.benefits?.length) setValue("benefits", d.benefits);
+    if (d.requirements?.length) setValue("requirements", d.requirements);
+    if (d.requiredDocuments?.length) setValue("requiredDocuments", d.requiredDocuments);
+    if (d.applicationMethod) setValue("applicationMethod", d.applicationMethod);
+    if (d.externalLink) setValue("externalLink", d.externalLink);
+
+    // auto-generate slug from title if empty
+    if (d.title && !watch("slug")) setValue("slug", generateSlug(d.title));
+
+    setAiOpen(false);
+    setAiText("");
+    toast({ title: "تم التعبئة التلقائية بنجاح!", description: "راجع البيانات وعدّل ما تحتاج قبل الحفظ" });
+  }
+
   async function onSubmit(data: ScholarshipSchemaType) {
     startTransition(async () => {
       const result = scholarship
@@ -187,6 +228,60 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
   }
 
   return (
+    <div className="space-y-6">
+    {/* AI Auto-fill Panel */}
+    <div className="bg-gradient-to-l from-primary-50 to-teal-50 border border-primary-200 rounded-2xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setAiOpen(!aiOpen)}
+        className="w-full flex items-center justify-between px-6 py-4 text-right"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="font-bold text-primary-800 text-sm">تعبئة تلقائية بالذكاء الاصطناعي</p>
+            <p className="text-xs text-primary-600">الصق تفاصيل المنحة وسيتم ملء الحقول تلقائياً</p>
+          </div>
+        </div>
+        {aiOpen ? <ChevronUp className="w-5 h-5 text-primary-600" /> : <ChevronDown className="w-5 h-5 text-primary-600" />}
+      </button>
+
+      {aiOpen && (
+        <div className="px-6 pb-5 space-y-3 border-t border-primary-200">
+          <p className="text-xs text-primary-700 pt-3">
+            الصق أي نص يحتوي تفاصيل المنحة (من موقع، بريد إلكتروني، إعلان...) وسيستخرج الذكاء الاصطناعي البيانات تلقائياً.
+          </p>
+          <Textarea
+            value={aiText}
+            onChange={(e) => setAiText(e.target.value)}
+            placeholder="مثال: منحة الحكومة التركية YTB 2025 تشمل بكالوريوس وماجستير ودكتوراه، ممولة بالكامل، تشمل راتب شهري 700 دولار، سكن مجاني، تأمين صحي، الموعد النهائي 20 فبراير 2025، يشترط إجادة اللغة التركية أو الإنجليزية، رابط التقديم: scholarship.gov.tr"
+            rows={6}
+            className="bg-white text-sm"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" size="sm" onClick={() => { setAiText(""); setAiOpen(false); }}>
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleAiFill}
+              disabled={aiLoading || !aiText.trim()}
+              className="bg-primary-500 hover:bg-primary-600 text-white"
+            >
+              {aiLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin ml-1" /> جارٍ التحليل...</>
+              ) : (
+                <><Sparkles className="w-4 h-4 ml-1" /> تحليل وتعبئة</>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       {/* Basic Info */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-brand-sm p-6">
@@ -470,5 +565,6 @@ export default function ScholarshipForm({ scholarship }: ScholarshipFormProps) {
         </Button>
       </div>
     </form>
+    </div>
   );
 }
