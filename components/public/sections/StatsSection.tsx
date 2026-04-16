@@ -8,9 +8,10 @@ interface StatsSectionProps {
     scholarshipsCount: number;
     applicationsCount: number;
   };
+  settings?: Record<string, string>;
 }
 
-export default function StatsSection({ stats }: StatsSectionProps) {
+export default function StatsSection({ stats, settings = {} }: StatsSectionProps) {
   const items = [
     {
       icon: GraduationCap,
@@ -22,7 +23,7 @@ export default function StatsSection({ stats }: StatsSectionProps) {
     },
     {
       icon: Users,
-      value: "+5000",
+      value: settings.stats_students ?? "+5000",
       label: "طالب استفاد",
       color: "from-gold-500 to-gold-400",
       bg: "bg-gold-50",
@@ -30,7 +31,7 @@ export default function StatsSection({ stats }: StatsSectionProps) {
     },
     {
       icon: Globe,
-      value: "+30",
+      value: settings.stats_countries ?? "+30",
       label: "دولة حول العالم",
       color: "from-teal-500 to-teal-400",
       bg: "bg-teal-50",
@@ -38,7 +39,7 @@ export default function StatsSection({ stats }: StatsSectionProps) {
     },
     {
       icon: Award,
-      value: "98%",
+      value: settings.stats_satisfaction ?? "98%",
       label: "نسبة رضا الطلاب",
       color: "from-purple-500 to-purple-400",
       bg: "bg-purple-50",

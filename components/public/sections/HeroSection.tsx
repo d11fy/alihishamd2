@@ -11,7 +11,11 @@ const features = [
   { icon: FileText, label: "تجهيز الملفات" },
 ];
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  settings?: Record<string, string>;
+}
+
+export default function HeroSection({ settings = {} }: HeroSectionProps) {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
@@ -39,7 +43,7 @@ export default function HeroSection() {
             className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 text-white/90 text-sm font-semibold mb-8"
           >
             <Sparkles className="w-4 h-4 text-gold-400" />
-            لا نبيع خدمات، نبيع نتائج
+            {settings.hero_badge ?? "لا نبيع خدمات، نبيع نتائج"}
             <Sparkles className="w-4 h-4 text-gold-400" />
           </motion.div>
 
@@ -50,7 +54,7 @@ export default function HeroSection() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6"
           >
-            نوصلك من غزة
+            {settings.hero_title_line1 ?? "نوصلك من غزة"}
             <br />
             <span className="text-gradient-gold">للعالم</span>
             <br />
@@ -73,8 +77,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            منصة متخصصة في المنح الدراسية الخارجية، القبولات الجامعية، وتجهيز ملفات السفر.
-            حلمك بالدراسة في الخارج نحوّله لواقع بخطوات مدروسة ونتائج مضمونة.
+            {settings.hero_subtitle ?? "منصة متخصصة في المنح الدراسية الخارجية، القبولات الجامعية، وتجهيز ملفات السفر. حلمك بالدراسة في الخارج نحوّله لواقع بخطوات مدروسة ونتائج مضمونة."}
           </motion.p>
 
           {/* Features pills */}
@@ -105,7 +108,7 @@ export default function HeroSection() {
             <Button asChild variant="gold" size="xl" className="min-w-[200px] shadow-gold-glow">
               <Link href="/scholarships">
                 <GraduationCap className="w-5 h-5" />
-                استعرض المنح
+                {settings.hero_cta_primary ?? "استعرض المنح"}
               </Link>
             </Button>
             <Button
@@ -114,7 +117,7 @@ export default function HeroSection() {
               className="min-w-[200px] bg-white/10 text-white border-2 border-white/30 hover:bg-white/20 backdrop-blur-sm shadow-none"
             >
               <Link href="/contact">
-                احجز استشارة مجانية
+                {settings.hero_cta_secondary ?? "احجز استشارة مجانية"}
                 <ArrowLeft className="w-5 h-5 flip-rtl" />
               </Link>
             </Button>

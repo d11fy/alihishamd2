@@ -17,15 +17,36 @@ const settingGroups = [
   {
     title: "الصفحة الرئيسية - Hero",
     fields: [
-      { key: "hero_title", label: "العنوان الرئيسي", type: "textarea" },
-      { key: "hero_subtitle", label: "الوصف التعريفي", type: "textarea" },
-      { key: "hero_cta_text", label: "نص زر الدعوة", type: "input" },
+      { key: "hero_badge", label: "نص الشارة العلوية", type: "input" },
+      { key: "hero_title_line1", label: "السطر الأول من العنوان", type: "input" },
+      { key: "hero_subtitle", label: "النص التعريفي تحت العنوان", type: "textarea" },
+      { key: "hero_cta_primary", label: "نص الزر الرئيسي", type: "input" },
+      { key: "hero_cta_secondary", label: "نص الزر الثانوي", type: "input" },
+    ],
+  },
+  {
+    title: "الإحصائيات",
+    fields: [
+      { key: "stats_students", label: "عدد الطلاب المستفيدين", type: "input" },
+      { key: "stats_countries", label: "عدد الدول حول العالم", type: "input" },
+      { key: "stats_satisfaction", label: "نسبة رضا الطلاب", type: "input" },
+    ],
+  },
+  {
+    title: "قسم قصص النجاح (الشهادات)",
+    fields: [
+      { key: "testimonials_badge", label: "نص الشارة", type: "input" },
+      { key: "testimonials_title", label: "العنوان الرئيسي", type: "input" },
+      { key: "testimonials_highlight", label: "الكلمة المميزة (ذهبية)", type: "input" },
+      { key: "testimonials_description", label: "الوصف", type: "textarea" },
     ],
   },
   {
     title: "من نحن",
     fields: [
+      { key: "about_badge", label: "نص الشارة", type: "input" },
       { key: "about_title", label: "عنوان القسم", type: "input" },
+      { key: "about_highlight", label: "الكلمة المميزة", type: "input" },
       { key: "about_description", label: "وصف من نحن", type: "textarea" },
     ],
   },

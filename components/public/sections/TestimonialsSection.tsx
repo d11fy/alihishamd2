@@ -7,9 +7,10 @@ import type { Testimonial } from "@/types";
 
 interface TestimonialsSectionProps {
   testimonials: Testimonial[];
+  settings?: Record<string, string>;
 }
 
-export default function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
+export default function TestimonialsSection({ testimonials, settings = {} }: TestimonialsSectionProps) {
   if (testimonials.length === 0) return null;
 
   return (
@@ -21,10 +22,10 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
       <div className="container-custom relative z-10">
         <SectionHeading
-          badge="قصص النجاح"
-          title="طلاب وصلوا"
-          highlight="للعالم"
-          description="قصص حقيقية لطلاب من غزة حققوا أحلامهم بالدراسة في الخارج"
+          badge={settings.testimonials_badge ?? "قصص النجاح"}
+          title={settings.testimonials_title ?? "طلاب وصلوا"}
+          highlight={settings.testimonials_highlight ?? "للعالم"}
+          description={settings.testimonials_description ?? "قصص حقيقية لطلاب من غزة حققوا أحلامهم بالدراسة في الخارج"}
           light
           className="mb-14"
         />

@@ -8,6 +8,7 @@ import TestimonialsSection from "@/components/public/sections/TestimonialsSectio
 import ConsultationSection from "@/components/public/sections/ConsultationSection";
 import StatsSection from "@/components/public/sections/StatsSection";
 import { prisma } from "@/lib/prisma";
+import { getSiteSettings } from "@/actions/settings";
 
 export const metadata: Metadata = {
   title: "مسارات غزة | Gaza Pathways - نوصلك للعالم",
@@ -52,20 +53,21 @@ async function getStats() {
 }
 
 export default async function HomePage() {
-  const [featuredScholarships, testimonials, stats] = await Promise.all([
+  const [featuredScholarships, testimonials, stats, settings] = await Promise.all([
     getFeaturedScholarships(),
     getTestimonials(),
     getStats(),
+    getSiteSettings(),
   ]);
 
   return (
     <>
-      <HeroSection />
-      <StatsSection stats={stats} />
-      <AboutSection />
+      <HeroSection settings={settings} />
+      <StatsSection stats={stats} settings={settings} />
+      <AboutSection settings={settings} />
       <ServicesSection />
       <FeaturedScholarships scholarships={featuredScholarships} />
-      <TestimonialsSection testimonials={testimonials} />
+      <TestimonialsSection testimonials={testimonials} settings={settings} />
       <ConsultationSection />
     </>
   );

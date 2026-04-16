@@ -35,7 +35,11 @@ const points = [
   "نتائج حقيقية وقصص نجاح موثقة من غزة للعالم",
 ];
 
-export default function AboutSection() {
+interface AboutSectionProps {
+  settings?: Record<string, string>;
+}
+
+export default function AboutSection({ settings = {} }: AboutSectionProps) {
   return (
     <section id="about" className="section-padding bg-gradient-to-b from-white to-gray-50">
       <div className="container-custom">
@@ -43,10 +47,10 @@ export default function AboutSection() {
           {/* Text side */}
           <div>
             <SectionHeading
-              badge="من نحن"
-              title="أكثر من مجرد"
-              highlight="منصة"
-              description="مسارات غزة ليست مجرد منصة للمنح، بل هي شريكك الحقيقي في رحلة البحث عن مستقبل أفضل. نؤمن بأن كل طالب في غزة يستحق فرصة حقيقية للوصول للعالم."
+              badge={settings.about_badge ?? "من نحن"}
+              title={settings.about_title ?? "أكثر من مجرد"}
+              highlight={settings.about_highlight ?? "منصة"}
+              description={settings.about_description ?? "مسارات غزة ليست مجرد منصة للمنح، بل هي شريكك الحقيقي في رحلة البحث عن مستقبل أفضل. نؤمن بأن كل طالب في غزة يستحق فرصة حقيقية للوصول للعالم."}
               centered={false}
             />
 
