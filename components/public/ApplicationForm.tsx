@@ -16,14 +16,6 @@ interface ApplicationFormProps {
   scholarshipTitle: string;
 }
 
-const gpaOptions = [
-  { value: "3.7-4.0", label: "ممتاز (3.7 - 4.0)" },
-  { value: "3.4-3.69", label: "جيد جدًا (3.4 - 3.69)" },
-  { value: "3.0-3.39", label: "جيد (3.0 - 3.39)" },
-  { value: "2.5-2.99", label: "مقبول (2.5 - 2.99)" },
-  { value: "below-2.5", label: "أقل من 2.5" },
-];
-
 const degreeOptions = [
   "بكالوريوس",
   "ماجستير",
@@ -32,17 +24,34 @@ const degreeOptions = [
   "دورة تدريبية",
 ];
 
+function gpaColor(v: number) {
+  if (v >= 90) return "text-green-600";
+  if (v >= 80) return "text-blue-600";
+  if (v >= 70) return "text-yellow-600";
+  return "text-red-500";
+}
+
+function gpaLabel(v: number) {
+  if (v >= 90) return "ممتاز";
+  if (v >= 80) return "جيد جداً";
+  if (v >= 70) return "جيد";
+  if (v >= 60) return "مقبول";
+  return "ضعيف";
+}
+
 export default function ApplicationForm({ scholarshipId, scholarshipTitle }: ApplicationFormProps) {
   const [submitted, setSubmitted] = useState(false);
+  const [gpaValue, setGpaValue] = useState(75);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<ApplicationSchemaType>({
     resolver: zodResolver(applicationSchema),
-    defaultValues: { scholarshipId },
+    defaultValues: { scholarshipId, gpa: "75" },
   });
 
   async function onSubmit(data: ApplicationSchemaType) {
@@ -50,6 +59,7 @@ export default function ApplicationForm({ scholarshipId, scholarshipTitle }: App
     if (result.success) {
       setSubmitted(true);
       reset();
+      setGpaValue(75);
     }
   }
 
@@ -130,16 +140,34 @@ export default function ApplicationForm({ scholarshipId, scholarshipTitle }: App
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Label className="input-label">المعدل التراكمي *</Label>
-            <select
-              {...register("gpa")}
-              className="w-full h-11 px-3 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-            >
-              <option value="">اختر معدلك</option>
-              {gpaOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <Label className="input-label">المعدل التراكمي (من 100) *</Label>
+            <div className="bg-gray-50 border border-input rounded-xl px-4 pt-3 pb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-400">50</span>
+                <div className="text-center">
+                  <span className={`text-3xl font-black ${gpaColor(gpaValue)}`}>{gpaValue}</span>
+                  <span className={`text-xs font-semibold block ${gpaColor(gpaValue)}`}>{gpaLabel(gpaValue)}</span>
+                </div>
+                <span className="text-xs text-gray-400">99</span>
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={99}
+                value={gpaValue}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setGpaValue(v);
+                  setValue("gpa", String(v), { shouldValidate: true });
+                }}
+                className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary-500"
+              />
+              <div className="flex justify-between text-xs text-gray-300 mt-1">
+                {[50, 60, 70, 80, 90, 99].map((n) => (
+                  <span key={n}>{n}</span>
+                ))}
+              </div>
+            </div>
             {errors.gpa && <p className="text-xs text-red-500 mt-1">{errors.gpa.message}</p>}
           </div>
           <div>
